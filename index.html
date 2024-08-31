@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <label>
+      <input id="checkbox" type="checkbox" />
+      屏幕唤起常驻
+    </label>
+
+    <script>
+      const checkbox = document.getElementById("checkbox");
+      let wakeLock = null;
+
+      if (navigator.wakeLock) {
+        checkbox.addEventListener("change", (e) => {
+          if (e.target.checked) {
+            setWakeLock();
+          } else {
+            wakeLock.release().then(() => {
+              wakeLock = null;
+            });
+          }
+        });
+
+        // 选项卡切换到当前页面，如果已经释放了熄屏，再次锁定
+        document.addEventListener("visibilitychange", () => {
+          if (wakeLock === null && document.visibilityState === "visible" && checkbox.checked) {
+            setWakeLock();
+          }
+        });
+      } else {
+        console.error("当前浏览器不支持Screen Wake Lock API！");
+      }
+
+      function setWakeLock() {
+        if (wakeLock) {
+          return;
+        }
+        navigator.wakeLock
+          .request("screen")
+          .then((result) => {
+            console.log(result);
+            wakeLock = result;
+            console.log("唤醒锁定已激活");
+            wakeLock.addEventListener("release", () => {
+              wakeLock = null;
+              console.log("唤醒锁定已释放");
+            });
+          })
+          .catch((err) => {
+            console.error(`<span class="red">唤醒锁定失败：${err.message}</span>`);
+          });
+      }
+    </script>
+  </body>
+</html>
